@@ -23,8 +23,9 @@ module.exports = function newOrdersHandler(req, res) {
   const itemsStmt = db.prepare('SELECT * FROM order_items WHERE order_id = ?');
   for (const o of orders) o.items = itemsStmt.all(o.id);
 
-  // 当前最大订单 id（前端下次轮询用，避免把"已取消/已确认"的旧单当新单）
+  // 当前库里最大订单 id（原样返回：前端用它推进基线；
+  // 若比前端记录的基线还小，说明数据库被重置过，前端会自动下调基线）
   const latest = db.prepare('SELECT IFNULL(MAX(id), 0) AS m FROM orders').get().m;
 
-  res.json({ orders, latest_id: Math.max(latest, sinceId) });
+  res.json({ orders, latest_id: latest });
 };

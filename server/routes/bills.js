@@ -16,30 +16,39 @@ function httpErr(status, msg) {
   return e;
 }
 
-// ---------- 今日营业统计（放在 /:id 之前注册，避免被当成 id） ----------
+// 日期参数统一解析：未传/空串 → 今天；'all' → 不限日期（列表与统计口径一致）
+function parseDateQuery(q) {
+  return q === undefined || q === '' ? localDateStr() : q;
+}
+
+// ---------- 营业统计（放在 /:id 之前注册，避免被当成 id） ----------
 router.get('/stats/today', (req, res) => {
-  const date = req.query.date || localDateStr();
+  const date = parseDateQuery(req.query.date);
+  const where = date === 'all' ? '' : 'WHERE bill_date = ?';
+  const args = date === 'all' ? [] : [date];
+
   const row = db.prepare(
     `SELECT COUNT(*)          AS bill_count,
             IFNULL(SUM(pay_amount), 0)   AS total_pay,
             IFNULL(SUM(table_fee), 0)    AS total_table_fee,
             IFNULL(SUM(goods_fee), 0)    AS total_goods_fee,
             IFNULL(SUM(discount), 0)     AS total_discount
-       FROM bills WHERE bill_date = ?`
-  ).get(date);
+       FROM bills ${where}`
+  ).get(...args);
 
   // 按支付方式分组统计（现金/微信/支付宝各收了多少）
   const byMethod = db.prepare(
     `SELECT pay_method, COUNT(*) AS cnt, IFNULL(SUM(pay_amount),0) AS amount
-       FROM bills WHERE bill_date = ? GROUP BY pay_method`
-  ).all(date);
+       FROM bills ${where} GROUP BY pay_method`
+  ).all(...args);
 
   res.json({ date, ...row, by_method: byMethod });
 });
 
 // ---------- 账单列表（按天查询，默认今天；date=all 查全部） ----------
 router.get('/', (req, res) => {
-  const { date = localDateStr(), limit = 100, offset = 0 } = req.query;
+  const { limit = 100, offset = 0 } = req.query;
+  const date = parseDateQuery(req.query.date);
 
   let sql = 'SELECT * FROM bills';
   const args = [];

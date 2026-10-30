@@ -80,12 +80,19 @@ async function pickTable(id) {
   const t = tables.find((x) => x.id === id);
   if (!t) return;
   if (t.status === 'occupied') return enterTable(t);
-  if (!confirm(`桌台「${t.name}」当前空闲。\n费率 ${money(t.hourly_rate)}/小时，最低消费 ${t.min_hours} 小时。\n\n确定现在开台吗？开台后即开始计费。`)) return;
+  if (!confirm(`桌台「${t.name}」当前空闲。\n费率 ${money(t.hourly_rate)}/小时，最低消费 ${t.min_hours} 小时。\n\n确定现在开台吗？开台后即开始计费。`)) {
+    showView('tables'); // 扫码进入又取消开台时，回落到选桌页，避免整页空白
+    return;
+  }
   try {
     const opened = await api(`/tables/${id}/open`, { method: 'POST', body: { customer_name: '自助开台' } });
     toast('✅ 开台成功，开始计费');
     enterTable(opened);
-  } catch (e) { toast('❌ ' + esc(e.message)); loadTables().then(renderTables); }
+  } catch (e) {
+    toast('❌ ' + esc(e.message));
+    await loadTables();
+    showView('tables');
+  }
 }
 
 // 进入某桌的点单界面

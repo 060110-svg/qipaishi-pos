@@ -18,13 +18,15 @@ function localDateStr(d = new Date()) {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
-// 生成单号：前缀 + 时间 + 随机数，如 DD20261030123001-483
+// 生成单号：前缀 + 时间(含毫秒) + 随机数，如 DD20261030123001512-483
+// 精确到毫秒 + 3位随机数，同毫秒碰撞概率约 1/900，实际可忽略；万一撞 UNIQUE 约束事务会安全回滚
 function genNo(prefix) {
   const d = new Date();
   const p = (n) => String(n).padStart(2, '0');
   const ts =
     `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}` +
-    `${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+    `${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}` +
+    String(d.getMilliseconds()).padStart(3, '0');
   return `${prefix}${ts}-${Math.floor(Math.random() * 900 + 100)}`;
 }
 

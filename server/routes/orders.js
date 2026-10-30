@@ -39,15 +39,22 @@ router.post('/', (req, res) => {
   if (!table) throw httpErr(404, '桌台不存在');
   if (table.status !== 'occupied') throw httpErr(400, '该桌台尚未开台，请先开台再下单');
 
-  // 先在事务外校验并计算金额（读到的价格做快照写入订单）
-  const getProd = db.prepare('SELECT * FROM products WHERE id = ?');
-  const lines = [];
-  let total = 0;
+  // 先按商品聚合数量：防止同一商品拆成多行、各自通过库存校验导致超卖
+  const qtyMap = new Map();
   for (const it of items) {
     const qty = Number.parseInt(it.quantity, 10);
     if (!Number.isFinite(qty) || qty <= 0) throw httpErr(400, '商品数量必须是正整数');
-    const p = getProd.get(it.product_id);
-    if (!p || !p.is_active) throw httpErr(400, `商品不存在或已下架 (id=${it.product_id})`);
+    const pid = Number(it.product_id);
+    qtyMap.set(pid, (qtyMap.get(pid) || 0) + qty);
+  }
+
+  // 在事务外校验并计算金额（读到的价格做快照写入订单）
+  const getProd = db.prepare('SELECT * FROM products WHERE id = ?');
+  const lines = [];
+  let total = 0;
+  for (const [pid, qty] of qtyMap) {
+    const p = getProd.get(pid);
+    if (!p || !p.is_active) throw httpErr(400, `商品不存在或已下架 (id=${pid})`);
     if (p.stock >= 0 && p.stock < qty) throw httpErr(400, `「${p.name}」库存不足（剩余 ${p.stock}）`);
     const subtotal = round2(p.price * qty);
     lines.push({ p, qty, subtotal });
@@ -63,15 +70,19 @@ router.post('/', (req, res) => {
     const orderId = info.lastInsertRowid;
 
     const insItem = db.prepare(
-      `INSERT INTO order_items (order_id, product_id, product_name, unit_price, quantity, subtotal)
-       VALUES (?, ?, ?, ?, ?, ?)`
+      `INSERT INTO order_items (order_id, product_id, product_name, unit_price, quantity, subtotal, stock_deducted)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
     );
+    // 带 stock >= ? 条件扣减，杜绝扣成负数（负数会被当成"不限量"）；受影响行数为 0 说明库存已被抢完
     const decStock = db.prepare(
-      `UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= 0` // stock=-1 不限量，不扣
+      `UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?`
     );
     for (const { p, qty, subtotal } of lines) {
-      insItem.run(orderId, p.id, p.name, p.price, qty, subtotal);
-      decStock.run(qty, p.id);
+      const deducted = p.stock >= 0 ? 1 : 0; // stock=-1 不限量，不扣减
+      insItem.run(orderId, p.id, p.name, p.price, qty, subtotal, deducted);
+      if (deducted && decStock.run(qty, p.id, qty).changes !== 1) {
+        throw httpErr(400, `「${p.name}」库存不足，请减少数量`); // 事务回滚
+      }
     }
     return db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId);
   })();
@@ -136,8 +147,10 @@ router.post('/:id/cancel', requireAdmin, (req, res) => {
 
   db.transaction(() => {
     db.prepare(`UPDATE orders SET status='cancelled' WHERE id=?`).run(o.id);
-    // 恢复库存（不限量的商品 stock=-1，UPDATE 条件跳过）
-    const items = db.prepare('SELECT * FROM order_items WHERE order_id=?').all(o.id);
+    // 只恢复"下单时确实扣过库存"的明细（下单时不限量、之后被改为限量的商品不会凭空加库存）
+    const items = db.prepare(
+      'SELECT * FROM order_items WHERE order_id=? AND stock_deducted=1'
+    ).all(o.id);
     const inc = db.prepare('UPDATE products SET stock = stock + ? WHERE id = ? AND stock >= 0');
     for (const it of items) inc.run(it.quantity, it.product_id);
   })();

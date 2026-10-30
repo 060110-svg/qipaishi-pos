@@ -33,6 +33,17 @@ db.exec('PRAGMA foreign_keys = ON');    // 打开外键约束
 const schemaSql = fs.readFileSync(path.join(__dirname, '..', 'db', 'schema.sql'), 'utf8');
 db.exec(schemaSql);
 
+// 轻量迁移：给旧版本数据库补充新增的列（新库建表时已包含，不会重复执行）
+function ensureColumn(table, column, ddl) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all();
+  if (!cols.some((c) => c.name === column)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${ddl}`);
+    console.log(`[db] 迁移：${table} 表新增列 ${column}`);
+  }
+}
+ensureColumn('tables', 'session_remark', 'TEXT');
+ensureColumn('order_items', 'stock_deducted', 'INTEGER NOT NULL DEFAULT 0');
+
 // 数据库为空时导入示例数据
 const tableCount = db.prepare('SELECT COUNT(*) AS c FROM tables').get().c;
 const productCount = db.prepare('SELECT COUNT(*) AS c FROM products').get().c;

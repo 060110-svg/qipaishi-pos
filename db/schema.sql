@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS tables (
   status      TEXT    NOT NULL DEFAULT 'idle',-- idle=空闲 occupied=使用中
   opened_at   TEXT,                           -- 开台时间（ISO 字符串，结桌后清空）
   customer_name TEXT,                         -- 开台顾客称呼（可空）
-  remark      TEXT,                           -- 备注
+  remark      TEXT,                           -- 店长维护的固定备注（开台/结桌不会清空）
+  session_remark TEXT,                        -- 本次开台备注（结桌时并入账单后清空）
   created_at  TEXT    NOT NULL                -- 创建时间
 );
 
@@ -54,7 +55,8 @@ CREATE TABLE IF NOT EXISTS order_items (
   product_name TEXT    NOT NULL,              -- 快照：下单时商品名
   unit_price   REAL    NOT NULL,              -- 快照：下单时单价
   quantity     INTEGER NOT NULL,              -- 数量
-  subtotal     REAL    NOT NULL               -- 小计 = unit_price × quantity
+  subtotal     REAL    NOT NULL,              -- 小计 = unit_price × quantity
+  stock_deducted INTEGER NOT NULL DEFAULT 0   -- 下单时是否实际扣了库存（不限量商品为 0，取消时按此恢复）
 );
 CREATE INDEX IF NOT EXISTS idx_items_order ON order_items(order_id);
 

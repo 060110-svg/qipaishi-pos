@@ -155,6 +155,7 @@ async function renderTables() {
   const el = $('#tab-tables');
   try {
     const tables = await api('/tables', { auth: false });
+    window._tables = tables; // 缓存供 onclick 处理器按 id 查找（避免名称里的引号破坏内联 JS）
     el.innerHTML = `
       <div class="toolbar">
         <h2>桌台看板 <small class="muted">共 ${tables.length} 桌，使用中 ${tables.filter(t => t.status === 'occupied').length} 桌</small></h2>
@@ -183,9 +184,9 @@ function tableCard(t) {
          </div>`
       : `<div class="tinfo muted">空闲中</div>
          <div class="tcard-btns">
-           <button class="btn primary" onclick="openOpenModal(${t.id}, '${esc(t.name)}')">开台</button>
+           <button class="btn primary" onclick="openOpenModal(${t.id})">开台</button>
            <button class="btn" onclick="openTableForm(${t.id})">编辑</button>
-           <button class="btn" onclick="deleteTable(${t.id}, '${esc(t.name)}')">删除</button>
+           <button class="btn" onclick="deleteTable(${t.id})">删除</button>
          </div>`}
   </div>`;
 }
@@ -224,18 +225,21 @@ async function saveTable(id) {
     closeModal(); renderTables();
   } catch (e) { alert(e.message); }
 }
-async function deleteTable(id, name) {
-  if (!confirm(`确定删除桌台「${name}」吗？`)) return;
+async function deleteTable(id) {
+  const t = (window._tables || []).find((x) => x.id === id);
+  if (!confirm(`确定删除桌台「${t ? t.name : id}」吗？`)) return;
   try { await api('/tables/' + id, { method: 'DELETE' }); renderTables(); }
   catch (e) { alert(e.message); }
 }
 
 // 开台弹窗
-function openOpenModal(id, name) {
+function openOpenModal(id) {
+  const t = (window._tables || []).find((x) => x.id === id);
+  const name = t ? t.name : '';
   openModal(`
     <h3>开台 · ${esc(name)}</h3>
     <label>顾客称呼（可空）<input id="f-cname" placeholder="如 王先生"></label>
-    <label>备注<input id="f-oremark" placeholder="可空"></label>
+    <label>开台备注（可空，结桌时并入账单备注）<input id="f-oremark"></label>
     <p class="tip">开台后立即开始按该桌费率计桌费；顾客也可在手机端自助开台。</p>
     <div class="modal-btns">
       <button class="btn" onclick="closeModal()">取消</button>
@@ -301,6 +305,7 @@ async function renderProducts() {
   const el = $('#tab-products');
   try {
     const list = await api('/products?all=1');
+    window._products = list; // 缓存供 onclick 处理器按 id 查找
     const shown = prodFilter === 'all' ? list : list.filter((p) => p.category === prodFilter);
     el.innerHTML = `
       <div class="toolbar">
@@ -327,7 +332,7 @@ async function renderProducts() {
               <td>
                 <button class="btn sm" onclick="openProductForm(${p.id})">编辑</button>
                 <button class="btn sm" onclick="toggleProduct(${p.id}, ${p.is_active ? 0 : 1})">${p.is_active ? '下架' : '上架'}</button>
-                <button class="btn sm danger" onclick="deleteProduct(${p.id}, '${esc(p.name)}')">删除</button>
+                <button class="btn sm danger" onclick="deleteProduct(${p.id})">删除</button>
               </td>
             </tr>`).join('')}
         </tbody>
@@ -375,8 +380,9 @@ async function toggleProduct(id, isActive) {
   try { await api('/products/' + id, { method: 'PUT', body: { is_active: isActive } }); renderProducts(); }
   catch (e) { alert(e.message); }
 }
-async function deleteProduct(id, name) {
-  if (!confirm(`确定删除商品「${name}」吗？\n（历史订单已做快照，不受影响）`)) return;
+async function deleteProduct(id) {
+  const p = (window._products || []).find((x) => x.id === id);
+  if (!confirm(`确定删除商品「${p ? p.name : id}」吗？\n（历史订单已做快照，不受影响）`)) return;
   try { await api('/products/' + id, { method: 'DELETE' }); renderProducts(); }
   catch (e) { alert(e.message); }
 }
@@ -449,7 +455,7 @@ async function renderBills() {
       <div class="toolbar">
         <h2>账单查询</h2>
         <div>
-          <input type="date" id="billDateInput" value="${billDate}" onchange="billDate = this.value; renderBills()">
+          <input type="date" id="billDateInput" value="${billDate === 'all' ? '' : billDate}" onchange="billDate = this.value || '${todayStr()}'; renderBills()">
           <button class="btn sm" onclick="billDate = 'all'; renderBills()">全部</button>
         </div>
       </div>
@@ -534,10 +540,21 @@ async function pollNewOrders() {
   if (!token) return;
   try {
     const data = await api('/notify/new-orders?since_id=' + lastOrderId);
-    // 首次轮询只记基线，不弹历史订单
+    // 数据库被重置过（订单 id 倒退）：静默下调基线，否则提醒会永久失灵
+    if (data.latest_id < lastOrderId) {
+      lastOrderId = data.latest_id;
+      localStorage.setItem('lastOrderId', lastOrderId);
+      return;
+    }
+    // 首次轮询且没有存量基线：只记基线，不弹历史订单
     if (firstPoll) {
       firstPoll = false;
-      if (!lastOrderId) { lastOrderId = data.latest_id; localStorage.setItem('lastOrderId', lastOrderId); }
+      if (!lastOrderId) {
+        lastOrderId = data.latest_id;
+        localStorage.setItem('lastOrderId', lastOrderId);
+        return;
+      }
+      // 有旧基线（localStorage 恢复）：期间新到的订单照常提醒，不 return
     }
     if (data.orders.length > 0) {
       lastOrderId = data.latest_id;
@@ -559,20 +576,25 @@ async function pollNewOrders() {
 
 /* ================= 启动 ================= */
 
+// 定时器句柄：重复登录（token 过期后再登录）时先清掉旧的，避免轮询成倍叠加
+let appTimers = [];
+
 async function initApp() {
+  appTimers.forEach(clearInterval);
+  appTimers = [];
   $('#soundBtn').textContent = soundOn ? '🔊' : '🔇';
   renderTables();
   pollNewOrders();
   // 每 8 秒轮询新订单；桌台看板可见时顺带刷新（顾客自助开台能实时看到）
-  setInterval(() => {
+  appTimers.push(setInterval(() => {
     pollNewOrders();
     if (!$('#tab-tables').classList.contains('hidden')) renderTables();
-  }, 8000);
+  }, 8000));
   // 顶栏时钟 + 使用中桌台时长每分钟刷新
-  setInterval(() => {
+  appTimers.push(setInterval(() => {
     $('#clock').textContent = new Date().toLocaleString('zh-CN');
     if (!$('#tab-tables').classList.contains('hidden')) renderTables();
-  }, 60000);
+  }, 60000));
 }
 
 // 页面加载：校验 token 是否有效
