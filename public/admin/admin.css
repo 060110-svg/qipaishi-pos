@@ -89,6 +89,13 @@ table.list tr:hover td { background: #f9fafb; }
 .oitems li { padding: 2px 0; }
 .ocard-btns { display: flex; gap: 8px; margin-top: 8px; }
 
+/* ---------- 进行中的桌台（账单查询页实时区） ---------- */
+.ip-section { margin-bottom: 18px; }
+.ip-title { font-size: 17px; margin-bottom: 10px; }
+.ip-card { border-left-color: #f59e0b; }
+.ip-card .oitems li { padding: 6px 0; border-bottom: 1px dashed #f3f4f6; }
+.ip-card .oitems li b { color: #dc2626; }
+
 /* ---------- 统计卡片 ---------- */
 .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 14px; }
 .stat { background: #fff; border-radius: 10px; padding: 14px; text-align: center; }

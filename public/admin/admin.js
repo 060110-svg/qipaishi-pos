@@ -432,12 +432,15 @@ function orderCard(o) {
   </div>`;
 }
 async function confirmOrder(id) {
-  try { await api(`/orders/${id}/confirm`, { method: 'POST' }); renderOrders(); toast('已确认订单'); }
+  try {
+    await api(`/orders/${id}/confirm`, { method: 'POST' });
+    renderOrders(); refreshInProgress(); toast('已确认订单');
+  }
   catch (e) { alert(e.message); }
 }
 async function cancelOrder(id) {
   if (!confirm('确定取消该订单吗？库存将自动恢复。')) return;
-  try { await api(`/orders/${id}/cancel`, { method: 'POST' }); renderOrders(); }
+  try { await api(`/orders/${id}/cancel`, { method: 'POST' }); renderOrders(); refreshInProgress(); }
   catch (e) { alert(e.message); }
 }
 
@@ -459,6 +462,7 @@ async function renderBills() {
           <button class="btn sm" onclick="billDate = 'all'; renderBills()">全部</button>
         </div>
       </div>
+      <div id="billsInProgress" class="ip-section"></div>
       <div class="stat-cards">
         <div class="stat"><b>${money(stats.total_pay)}</b><span>实收合计</span></div>
         <div class="stat"><b>${stats.bill_count}</b><span>结桌笔数</span></div>
@@ -487,7 +491,46 @@ async function renderBills() {
             </tr>`).join('') || '<tr><td colspan="12" class="muted">该日期暂无账单</td></tr>'}
         </tbody>
       </table>`;
+    refreshInProgress(); // 填充「进行中的桌台」实时区
   } catch (e) { el.innerHTML = `<p class="error">${esc(e.message)}</p>`; }
+}
+
+// 进行中的桌台：订单被接受后实时同步到账单查询页（轮询只刷新这一块，不重渲染整页）
+async function refreshInProgress() {
+  const box = $('#billsInProgress');
+  if (!box) return; // 不在账单查询页签时不拉取
+  try {
+    const list = await api('/bills/in-progress');
+    box.innerHTML = list.length
+      ? `<h2 class="ip-title">进行中的桌台 <small class="muted">已接单的订单实时同步在此，每 8 秒自动刷新</small></h2>
+         ${list.map(inProgressCard).join('')}`
+      : '';
+  } catch (_) { /* 网络抖动忽略，下个周期重试 */ }
+}
+
+// 单张进行中桌台卡片：累计桌费 + 每笔已接单订单的商品明细
+function inProgressCard(s) {
+  return `
+  <div class="ocard ip-card">
+    <div class="ocard-head">
+      <b>桌台 ${esc(s.table_name)}</b>
+      <span class="tag st-confirmed">进行中</span>
+      <span class="muted">开台 ${fmtTime(s.opened_at)} · 已开 ${fmtDur(s.opened_at)}</span>
+      <span class="oamount">${money(s.estimate_total)}</span>
+    </div>
+    <table class="kv">
+      <tr><td>桌费（累计）</td><td>${Math.floor(s.minutes / 60)}小时${s.minutes % 60}分（计费 ${s.billed_hours}h × ${money(s.hourly_rate)}）= ${money(s.table_fee)}</td></tr>
+      <tr><td>商品费（${s.orders.length} 笔已接单）</td><td>${money(s.goods_fee)}</td></tr>
+      <tr class="total"><td>预计应收</td><td>${money(s.estimate_total)}</td></tr>
+    </table>
+    ${s.orders.length ? `<ul class="oitems">${s.orders.map((o) => `
+      <li>
+        <span class="tag st-confirmed">已接单</span> ${esc(o.order_no)} · ${fmtTime(o.confirmed_at)} <b>${money(o.total_amount)}</b>
+        <div class="muted">${o.items.map((it) => `${esc(it.product_name)} × ${it.quantity}　${money(it.subtotal)}`).join('<br>')}</div>
+        ${o.remark ? `<div class="muted">备注：${esc(o.remark)}</div>` : ''}
+      </li>`).join('')}</ul>`
+      : '<p class="muted">还没有已接单的订单</p>'}
+  </div>`;
 }
 
 // 账单详情弹窗 + 打印小票
@@ -589,6 +632,7 @@ async function initApp() {
   appTimers.push(setInterval(() => {
     pollNewOrders();
     if (!$('#tab-tables').classList.contains('hidden')) renderTables();
+    if (!$('#tab-bills').classList.contains('hidden')) refreshInProgress();
   }, 8000));
   // 顶栏时钟 + 使用中桌台时长每分钟刷新
   appTimers.push(setInterval(() => {
