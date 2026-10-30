@@ -6,6 +6,8 @@
 
 /* ---------- 常量与状态 ---------- */
 const CATEGORIES = { all: '全部', cigarette: '香烟', drink: '饮料', snack: '零食', other: '其他' };
+// 与后端 server/routes/tables.js 的 ROOM_TYPES 保持一致
+const ROOM_TYPES = { standard: '标准间', deluxe: '豪华间', vip: 'VIP包间' };
 const ORDER_STATUS = {
   pending:   { text: '待店长确认', cls: 'st-pending' },
   confirmed: { text: '已确认', cls: 'st-confirmed' },
@@ -75,25 +77,62 @@ function renderTables() {
   }).join('');
 }
 
-// 点击桌台：空闲 → 询问开台；使用中 → 直接进入点单
-async function pickTable(id) {
+// 点击桌台：空闲 → 弹出开台确认弹层；使用中 → 直接进入点单
+function pickTable(id) {
   const t = tables.find((x) => x.id === id);
   if (!t) return;
   if (t.status === 'occupied') return enterTable(t);
-  if (!confirm(`桌台「${t.name}」当前空闲。\n费率 ${money(t.hourly_rate)}/小时，最低消费 ${t.min_hours} 小时。\n\n确定现在开台吗？开台后即开始计费。`)) {
-    showView('tables'); // 扫码进入又取消开台时，回落到选桌页，避免整页空白
-    return;
+
+  // 扫码直达空闲桌时页面还是空白，先回落到选桌页作为弹层背景，避免整页空白
+  if ($('#viewTables').classList.contains('hidden') &&
+      $('#viewShop').classList.contains('hidden') &&
+      $('#viewOrders').classList.contains('hidden')) {
+    showView('tables');
   }
+
+  pendingOpenTableId = id;
+  $('#mOpenName').textContent = t.name;
+  $('#mOpenType').textContent = ROOM_TYPES[t.room_type] || t.room_type;
+  $('#mOpenRate').textContent = money(t.hourly_rate) + ' / 小时';
+  $('#mOpenMin').textContent = t.min_hours + ' 小时';
+  $('#mOpenCname').value = '';
+  $('#mOpenMask').classList.remove('hidden');
+}
+
+/* ---------- 开台确认弹层 ---------- */
+let pendingOpenTableId = null;   // 待确认开台的桌台 id
+
+function closeOpenSheet() {
+  pendingOpenTableId = null;
+  $('#mOpenMask').classList.add('hidden');
+}
+$('#mCancelOpen').addEventListener('click', closeOpenSheet);
+// 点弹层外区域也视为取消
+$('#mOpenMask').addEventListener('click', (e) => { if (e.target.id === 'mOpenMask') closeOpenSheet(); });
+
+$('#mDoOpen').addEventListener('click', async () => {
+  const id = pendingOpenTableId;
+  if (id === null) return;
+  const btn = $('#mDoOpen');
+  btn.disabled = true;
   try {
-    const opened = await api(`/tables/${id}/open`, { method: 'POST', body: { customer_name: '自助开台' } });
+    const name = $('#mOpenCname').value.trim();
+    const opened = await api(`/tables/${id}/open`, {
+      method: 'POST',
+      body: { customer_name: name || '自助开台' },
+    });
+    closeOpenSheet();
     toast('✅ 开台成功，开始计费');
     enterTable(opened);
   } catch (e) {
     toast('❌ ' + esc(e.message));
+    closeOpenSheet();
     await loadTables();
     showView('tables');
+  } finally {
+    btn.disabled = false;
   }
-}
+});
 
 // 进入某桌的点单界面
 function enterTable(t) {

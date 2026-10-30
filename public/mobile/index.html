@@ -48,6 +48,27 @@
     <button class="m-nav-item" data-view="orders">📋 我的订单</button>
   </nav>
 
+  <!-- 开台确认弹层（自助开台前确认计费规则，替代原生 confirm） -->
+  <div id="mOpenMask" class="m-mask hidden">
+    <div class="m-sheet">
+      <h3>开台确认</h3>
+      <div class="m-open-table">
+        <span id="mOpenName" class="m-open-name"></span>
+        <span id="mOpenType" class="m-open-type"></span>
+      </div>
+      <div class="m-open-rows">
+        <div class="m-open-row"><span>桌费费率</span><b id="mOpenRate"></b></div>
+        <div class="m-open-row"><span>最低消费</span><b id="mOpenMin"></b></div>
+      </div>
+      <p class="m-open-warn">⏱ 确认开台后将立即开始计桌费</p>
+      <input id="mOpenCname" class="m-open-input" maxlength="20" placeholder="怎么称呼您？（可空），如：王先生">
+      <div class="m-sheet-btns">
+        <button class="m-btn" id="mCancelOpen">再想想</button>
+        <button class="m-btn primary" id="mDoOpen">确认开台</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 提交订单弹层 -->
   <div id="mConfirmMask" class="m-mask hidden">
     <div class="m-sheet">
