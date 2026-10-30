@@ -138,6 +138,8 @@ npm run reset-db   # ⚠ 清空数据库重建（恢复示例数据，慎用）
 | GET | `/api/bills/stats/today?date=` | 店长 | 营业统计 |
 | GET | `/api/bills/:id` | 店长 | 账单详情（含明细，打印用） |
 | GET | `/api/bills/in-progress` | 店长 | 进行中的桌台（累计桌费+已接单订单，账单查询实时区） |
+| POST | `/api/wx/login` | 公开 | 小程序静默登录 `{code}` → `{ok, token}`（未配置微信时 `ok:false`，前端降级匿名） |
+| GET | `/api/wx/table-qrcode?name=&env=` | 店长 | 每桌小程序码 PNG（env=release/trial/develop） |
 
 店长接口鉴权方式：请求头 `x-admin-token: <登录返回的token>`。
 
@@ -202,3 +204,12 @@ qipaishi-pos/
 4. 每桌的小程序码：调用微信 `wxacode.getUnlimited` 接口生成，`scene` 传桌台名（如 `A1`），小程序已支持解析（`app.js` onLaunch）；需要的话可以在后端加一个生成/下载二维码的接口
 
 > 注意：未发布前，体验版/开发版只有"体验成员"能打开，顾客扫码进不来——这是微信的平台规则，与代码无关。
+
+### 生产加固（已内置，配置即生效）
+
+- 安全：helmet 安全头、全局限流 300 次/分/IP、顾客写接口 20 次/分、请求体 ≤100KB
+- 身份：小程序静默登录绑定 openid，写入 `orders.openid` / `tables.openid` 供防刷追溯；未配置微信时自动降级匿名，局域网试用不受影响
+- 通知：新订单可推企业微信群机器人（`WEBHOOK_URL`）
+- 运维：`ecosystem.config.js`（pm2 守护/开机自启）、`scripts/backup-db.js`（定时备份保留 14 份）
+- 环境变量：`PORT`、`ADMIN_PASSWORD`、`WX_APPID`、`WX_SECRET`、`WEBHOOK_URL`、`BACKUP_DIR`、`BACKUP_KEEP`
+- 📖 完整上线步骤（💰买服务器/域名、⚠ICP 备案、nginx+HTTPS、提审发布、桌码打印、验收清单）见 [docs/deploy.md](docs/deploy.md)

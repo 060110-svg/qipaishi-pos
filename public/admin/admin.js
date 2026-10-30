@@ -159,7 +159,10 @@ async function renderTables() {
     el.innerHTML = `
       <div class="toolbar">
         <h2>桌台看板 <small class="muted">共 ${tables.length} 桌，使用中 ${tables.filter(t => t.status === 'occupied').length} 桌</small></h2>
-        <button class="btn primary" onclick="openTableForm()">＋ 新增桌台</button>
+        <div>
+          <button class="btn" onclick="openQrcodeModal()">🖨 桌码</button>
+          <button class="btn primary" onclick="openTableForm()">＋ 新增桌台</button>
+        </div>
       </div>
       <div class="table-grid">
         ${tables.map(tableCard).join('')}
@@ -230,6 +233,52 @@ async function deleteTable(id) {
   if (!confirm(`确定删除桌台「${t ? t.name : id}」吗？`)) return;
   try { await api('/tables/' + id, { method: 'DELETE' }); renderTables(); }
   catch (e) { alert(e.message); }
+}
+
+/* ---------- 每桌小程序码（上线后打印贴桌） ---------- */
+async function openQrcodeModal(env = 'release') {
+  const tables = window._tables || [];
+  openModal(`
+    <h3>每桌小程序码</h3>
+    <p class="tip">打印后贴到对应桌台，顾客扫码直达该桌点单页。生成前提：服务器已配置 WX_APPID/WX_SECRET，且所选版本的小程序已发布（体验版码仅体验成员可扫）。</p>
+    <div class="qr-switch">
+      <button class="btn sm ${env === 'release' ? 'primary' : ''}" onclick="openQrcodeModal('release')">正式版码</button>
+      <button class="btn sm ${env === 'trial' ? 'primary' : ''}" onclick="openQrcodeModal('trial')">体验版码</button>
+      <button class="btn sm" onclick="printQrcodes()">🖨 打印整页</button>
+    </div>
+    <div id="qrGrid" class="qr-grid"><p class="muted">生成中…</p></div>
+    <div class="modal-btns">
+      <button class="btn" onclick="closeModal()">关闭</button>
+    </div>`);
+  const grid = $('#qrGrid');
+  try {
+    const items = await Promise.all(tables.map(async (t) => {
+      const res = await fetch(`/api/wx/table-qrcode?name=${encodeURIComponent(t.name)}&env=${env}`,
+        { headers: { 'x-admin-token': token } });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        return { name: t.name, error: d.error || `请求失败(${res.status})` };
+      }
+      return { name: t.name, url: URL.createObjectURL(await res.blob()) };
+    }));
+    window._qrItems = items;
+    grid.innerHTML = items.map((it) => it.error
+      ? `<div class="qr-cell"><b>${esc(it.name)}</b><p class="muted">${esc(it.error)}</p></div>`
+      : `<div class="qr-cell"><img src="${it.url}" alt="${esc(it.name)}"><b>${esc(it.name)}</b><span class="muted">扫码点单</span></div>`
+    ).join('');
+  } catch (e) { grid.innerHTML = `<p class="error">${esc(e.message)}</p>`; }
+}
+
+// 打印桌码页：把已生成的二维码放进 #printArea 走浏览器打印（@media print 只打印该区域）
+function printQrcodes() {
+  const items = (window._qrItems || []).filter((it) => it.url);
+  if (!items.length) return alert('没有生成成功的小程序码可打印');
+  $('#printArea').innerHTML = `
+    <h2>扫码点单 · 每桌小程序码</h2>
+    <div class="qr-print-grid">
+      ${items.map((it) => `<div class="qr-print-cell"><img src="${it.url}"><b>${esc(it.name)}</b><span>扫码点单</span></div>`).join('')}
+    </div>`;
+  window.print();
 }
 
 // 开台弹窗
