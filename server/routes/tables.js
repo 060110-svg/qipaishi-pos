@@ -8,6 +8,7 @@ const db = require('../db');
 const { requireAdmin } = require('../auth');
 const { round2, nowISO, localDateStr, genNo } = require('../utils/helpers');
 const { calcTableFee } = require('../utils/pricing');
+const wx = require('../wx');
 
 const router = express.Router();
 
@@ -100,9 +101,11 @@ router.post('/:id/open', (req, res) => {
 
   const { customer_name = '', remark = '' } = req.body || {};
   // remark 写入 session_remark（本次开台备注）；店长维护的固定备注 t.remark 不受影响
+  // openid：小程序静默登录后带入（匿名/H5 为空），用于防刷追溯
   db.prepare(
-    `UPDATE tables SET status='occupied', opened_at=?, customer_name=?, session_remark=? WHERE id=?`
-  ).run(nowISO(), String(customer_name).slice(0, 30), String(remark).slice(0, 100), t.id);
+    `UPDATE tables SET status='occupied', opened_at=?, customer_name=?, session_remark=?, openid=? WHERE id=?`
+  ).run(nowISO(), String(customer_name).slice(0, 30), String(remark).slice(0, 100),
+    wx.openidOf(req.get('x-wx-token')), t.id);
 
   res.json(db.prepare('SELECT * FROM tables WHERE id = ?').get(t.id));
 });
@@ -189,7 +192,7 @@ router.post('/:id/close', requireAdmin, (req, res) => {
 
     // 桌台回到空闲（只清空本次会话字段，店长维护的 remark 保留）
     db.prepare(
-      `UPDATE tables SET status='idle', opened_at=NULL, customer_name=NULL, session_remark=NULL WHERE id=?`
+      `UPDATE tables SET status='idle', opened_at=NULL, customer_name=NULL, session_remark=NULL, openid=NULL WHERE id=?`
     ).run(t.id);
 
     return db.prepare('SELECT * FROM bills WHERE id=?').get(billId);

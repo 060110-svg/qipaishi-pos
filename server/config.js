@@ -23,6 +23,20 @@ module.exports = {
     roundUpToHour: true, // true=不足1小时按1小时计；false=按实际分钟折算
   },
 
+  // ===== 微信小程序对接（上线必需；局域网试用可留空，前端会自动降级为匿名） =====
+  // appId 见 miniprogram/project.config.json；appSecret 在 mp.weixin.qq.com
+  // 「开发管理 → 开发设置」生成，只通过环境变量 WX_SECRET 注入服务器，切勿写进代码库
+  wx: {
+    appId: process.env.WX_APPID || 'wx77a1a1cd8dfa9da0',
+    appSecret: process.env.WX_SECRET || '',
+  },
+
+  // 企业微信群机器人 Webhook：新订单实时推送（留空=不推送，网页轮询提醒不受影响）
+  webhookUrl: process.env.WEBHOOK_URL || '',
+
+  // 限流（防恶意刷接口）：全局每分钟上限 / 顾客写接口每分钟上限
+  rateLimit: { globalPerMin: 300, writePerMin: 20 },
+
   // ===== 支付扩展预留位 =====
   // 目前只做金额计算与订单/账单记录，pay_method 仅为记账字段。
   // 将来接入微信/支付宝时：

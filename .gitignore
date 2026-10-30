@@ -19,3 +19,6 @@ Thumbs.db
 
 # 微信开发者工具个人配置（本地编译模式等，不入库）
 miniprogram/project.private.config.json
+
+# 数据库定时备份目录（scripts/backup-db.js 生成，含敏感经营数据，不入库）
+backups/

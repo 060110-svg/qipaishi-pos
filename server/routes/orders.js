@@ -8,8 +8,10 @@
  */
 const express = require('express');
 const db = require('../db');
+const config = require('../config');
 const { requireAdmin } = require('../auth');
 const { round2, nowISO, genNo } = require('../utils/helpers');
+const wx = require('../wx');
 
 const router = express.Router();
 
@@ -62,11 +64,12 @@ router.post('/', (req, res) => {
   }
 
   // 事务：写订单 + 写明细 + 扣库存，一步失败全部回滚
+  const openid = wx.openidOf(req.get('x-wx-token')); // 小程序静默登录归属（匿名/H5 为空）
   const order = db.transaction(() => {
     const info = db.prepare(
-      `INSERT INTO orders (order_no, table_id, status, total_amount, remark, created_at)
-       VALUES (?, ?, 'pending', ?, ?, ?)`
-    ).run(genNo('DD'), table.id, total, String(remark).slice(0, 200), nowISO());
+      `INSERT INTO orders (order_no, table_id, status, total_amount, remark, openid, created_at)
+       VALUES (?, ?, 'pending', ?, ?, ?, ?)`
+    ).run(genNo('DD'), table.id, total, String(remark).slice(0, 200), openid, nowISO());
     const orderId = info.lastInsertRowid;
 
     const insItem = db.prepare(
@@ -87,8 +90,24 @@ router.post('/', (req, res) => {
     return db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId);
   })();
 
+  pushWebhook(order, table); // 企业微信群推送（未配置或失败均不影响下单）
   res.json(attachDetail(order));
 });
+
+// 新订单推送到企业微信群机器人（config.webhookUrl 留空=不推送）
+function pushWebhook(order, table) {
+  if (!config.webhookUrl) return;
+  const items = db.prepare('SELECT product_name, quantity FROM order_items WHERE order_id = ?').all(order.id);
+  const content = `🛎 新订单：桌台 ${table.name}（${order.order_no}）\n`
+    + items.map((it) => `${it.product_name}×${it.quantity}`).join('、')
+    + `\n合计 ${order.total_amount} 元`
+    + (order.remark ? `\n备注：${order.remark}` : '');
+  fetch(config.webhookUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ msgtype: 'text', text: { content } }),
+  }).catch((e) => console.error('[webhook] 推送失败：', e.message));
+}
 
 // ---------- 查询订单列表 ----------
 // 顾客：必须带 table_id，只能看自己桌的订单

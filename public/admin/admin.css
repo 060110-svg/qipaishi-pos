@@ -96,6 +96,13 @@ table.list tr:hover td { background: #f9fafb; }
 .ip-card .oitems li { padding: 6px 0; border-bottom: 1px dashed #f3f4f6; }
 .ip-card .oitems li b { color: #dc2626; }
 
+/* ---------- 每桌小程序码 ---------- */
+.qr-switch { display: flex; gap: 8px; margin-bottom: 12px; }
+.qr-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.qr-cell { border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px; text-align: center; }
+.qr-cell img { width: 100%; max-width: 150px; display: block; margin: 0 auto 6px; }
+.qr-cell b { display: block; font-size: 16px; }
+
 /* ---------- 统计卡片 ---------- */
 .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 14px; }
 .stat { background: #fff; border-radius: 10px; padding: 14px; text-align: center; }
@@ -160,4 +167,10 @@ table.kv tr.total td { font-size: 17px; font-weight: bold; color: #dc2626; borde
   #printArea h2 { text-align: center; font-size: 15px; margin-bottom: 6px; }
   #printArea ul { list-style: none; padding-left: 0; }
   #printArea hr { border: none; border-top: 1px dashed #000; margin: 6px 0; }
+  /* 桌码打印：一页多枚，裁开贴桌 */
+  .qr-print-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8mm; }
+  .qr-print-cell { text-align: center; page-break-inside: avoid; }
+  .qr-print-cell img { width: 42mm; height: 42mm; display: block; margin: 0 auto 2mm; }
+  .qr-print-cell b { font-size: 18px; display: block; }
+  .qr-print-cell span { font-size: 11px; }
 }

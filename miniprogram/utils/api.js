@@ -4,12 +4,15 @@
 const { BASE_URL } = require('./config.js');
 
 function request(path, { method = 'GET', body } = {}) {
+  const header = { 'Content-Type': 'application/json' };
+  const wxToken = wx.getStorageSync('wxToken');
+  if (wxToken) header['x-wx-token'] = wxToken; // 静默登录会话（匿名时不带）
   return new Promise((resolve, reject) => {
     wx.request({
       url: BASE_URL + '/api' + path,
       method,
       data: body,
-      header: { 'Content-Type': 'application/json' },
+      header,
       success(res) {
         if (res.statusCode >= 200 && res.statusCode < 300) resolve(res.data);
         else reject(new Error((res.data && res.data.error) || `请求失败(${res.statusCode})`));

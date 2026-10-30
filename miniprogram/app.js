@@ -1,5 +1,7 @@
+const api = require('./utils/api.js');
+
 /**
- * 小程序入口：解析扫码参数、维护当前桌台
+ * 小程序入口：解析扫码参数、静默登录绑定 openid、维护当前桌台
  * 扫码进入：小程序码 scene 为桌台名（如 A1）或 table=A1；普通进入也可带 query table=A1
  */
 App({
@@ -15,6 +17,20 @@ App({
     const q = options.query || {};
     const name = q.table || q.id || '';
     if (name) this.globalData.sceneTable = name;
+    this.wxLogin();
+  },
+
+  // 静默登录：拿 openid 会话令牌，开台/下单自动带上用于归属与防刷。
+  // 后端未配置微信或失败时静默降级为匿名，不影响点单流程。
+  wxLogin() {
+    wx.login({
+      success: (res) => {
+        if (!res.code) return;
+        api.request('/wx/login', { method: 'POST', body: { code: res.code } })
+          .then((r) => { if (r && r.ok) wx.setStorageSync('wxToken', r.token); })
+          .catch(() => { /* 匿名降级 */ });
+      },
+    });
   },
 
   setTable(t) {

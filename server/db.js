@@ -43,6 +43,9 @@ function ensureColumn(table, column, ddl) {
 }
 ensureColumn('tables', 'session_remark', 'TEXT');
 ensureColumn('order_items', 'stock_deducted', 'INTEGER NOT NULL DEFAULT 0');
+// 微信 openid 归属：上线后顾客静默登录绑定，用于防刷追溯与跨设备"我的订单"
+ensureColumn('orders', 'openid', 'TEXT');
+ensureColumn('tables', 'openid', 'TEXT');
 
 // 数据库为空时导入示例数据
 const tableCount = db.prepare('SELECT COUNT(*) AS c FROM tables').get().c;
