@@ -1,0 +1,66 @@
+<view class="shop-head">
+  <text class="shop-table">{{tableName}}</text>
+  <text class="muted">选好后提交，店长接单后结桌统一结算</text>
+</view>
+
+<!-- 分类页签 -->
+<scroll-view class="cats" scroll-x enhanced show-scrollbar="{{false}}">
+  <view
+    class="cat {{cat === item.key ? 'active' : ''}}"
+    wx:for="{{cats}}" wx:key="key"
+    bindtap="setCat" data-key="{{item.key}}"
+  >{{item.text}}</view>
+</scroll-view>
+
+<!-- 商品列表 -->
+<view class="products">
+  <view class="pcard" wx:for="{{products}}" wx:key="id">
+    <view class="pinfo">
+      <view class="pname">{{item.name}}</view>
+      <view class="pprice">
+        {{item.priceText}}
+        <text class="pstock" wx:if="{{item.stock >= 0}}">库存{{item.stock}}</text>
+      </view>
+    </view>
+    <text class="soldout" wx:if="{{item.soldOut}}">已售罄</text>
+    <view class="add" wx:elif="{{item.qty === 0}}" bindtap="changeQty" data-pid="{{item.id}}" data-delta="1">＋</view>
+    <view class="stepper" wx:else>
+      <view class="step-btn" bindtap="changeQty" data-pid="{{item.id}}" data-delta="-1">－</view>
+      <text class="step-num">{{item.qty}}</text>
+      <view class="step-btn" bindtap="changeQty" data-pid="{{item.id}}" data-delta="1">＋</view>
+    </view>
+  </view>
+  <view class="empty" wx:if="{{products.length === 0}}">该分类暂无商品</view>
+</view>
+
+<view style="height: 80px"></view>
+
+<!-- 底部购物车条 -->
+<view class="cartbar" wx:if="{{cartCount > 0}}">
+  <view class="cart-info">
+    <text class="cart-count">{{cartCount}}</text>
+    合计 <text class="cart-total">{{cartTotalText}}</text>
+  </view>
+  <button class="btn primary submit-btn" bindtap="openConfirm">提交订单</button>
+</view>
+
+<!-- 提交订单确认弹层 -->
+<view class="mask" wx:if="{{showConfirm}}" bindtap="closeConfirm">
+  <view class="sheet" catchtap="noop">
+    <view class="sheet-title">确认订单</view>
+    <view class="citem" wx:for="{{confirmItems}}" wx:key="name">
+      <text>{{item.name}} × {{item.qty}}</text>
+      <text class="price">{{item.subtotalText}}</text>
+    </view>
+    <view class="ctotal">合计 <text class="price">{{confirmTotalText}}</text></view>
+    <textarea
+      class="remark" rows="2" value="{{remark}}"
+      placeholder="备注（可空），如：少冰、尽快送"
+      bindinput="onRemarkInput"
+    />
+    <view class="sheet-btns">
+      <button class="btn" bindtap="closeConfirm">再想想</button>
+      <button class="btn primary" disabled="{{submitting}}" bindtap="doSubmit">确认提交</button>
+    </view>
+  </view>
+</view>

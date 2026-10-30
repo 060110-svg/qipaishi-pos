@@ -1,0 +1,17 @@
+<view class="wrap" wx:if="{{hasTable}}">
+  <view class="ocard" wx:for="{{orders}}" wx:key="id">
+    <view class="ohead">
+      <text class="tag {{item.statusCls}}">{{item.statusText}}</text>
+      <text class="muted">{{item.timeText}}</text>
+      <text class="oamount">{{item.amountText}}</text>
+    </view>
+    <view class="oitems">{{item.itemsText}}</view>
+    <view class="muted" wx:if="{{item.remark}}">备注：{{item.remark}}</view>
+  </view>
+  <view class="empty" wx:if="{{orders.length === 0}}">本桌还没有订单，去点些饮料零食吧～</view>
+</view>
+
+<view class="wrap" wx:else>
+  <view class="empty">请先选择桌台</view>
+  <button class="btn primary go-btn" bindtap="gotoTables">去选择桌台</button>
+</view>

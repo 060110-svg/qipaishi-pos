@@ -1,0 +1,31 @@
+.notice { padding: 12px 16px; color: #6b7280; font-size: 13px; }
+
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 16px 30px; }
+.tcard {
+  background: #fff; border-radius: 12px; padding: 14px 8px; text-align: center;
+  border: 2px solid #e5e7eb;
+}
+.tcard.occupied { border-color: #f59e0b; background: #fffbeb; }
+.tname { font-size: 20px; font-weight: bold; }
+.ttype { font-size: 12px; color: #4f46e5; margin: 4px 0; }
+.tstatus { font-size: 11px; color: #10b981; }
+.tstatus.occ { color: #f59e0b; }
+
+/* 开台确认弹层 */
+.sheet-title { font-size: 17px; font-weight: bold; }
+.open-table { display: flex; align-items: center; gap: 10px; margin: 8px 0 12px; }
+.open-name { font-size: 32px; font-weight: 800; color: #4f46e5; line-height: 1; }
+.open-type { font-size: 12px; color: #6b7280; background: #f3f4f6; border-radius: 10px; padding: 3px 10px; }
+.open-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; font-size: 14px; color: #374151; border-bottom: 1px dashed #f3f4f6;
+}
+.open-row .price { color: #ef4444; font-size: 15px; font-weight: bold; }
+.open-warn {
+  background: #fffbeb; color: #b45309; border-radius: 8px;
+  padding: 9px 12px; font-size: 13px; margin: 12px 0;
+}
+.open-input {
+  border: 1px solid #d1d5db; border-radius: 8px;
+  padding: 10px; font-size: 14px; margin-bottom: 12px; background: #fff;
+}
