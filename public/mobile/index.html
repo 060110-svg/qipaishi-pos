@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>自助点单 · 棋牌室</title>
+  <link rel="stylesheet" href="mobile.css">
+</head>
+<body>
+
+  <!-- 顶栏：当前桌台 -->
+  <header class="m-topbar">
+    <div>
+      <b id="mTableName">选择桌台</b>
+      <span id="mTableInfo" class="m-sub"></span>
+    </div>
+    <button id="mSwitchBtn" class="m-btn hidden">换桌</button>
+  </header>
+
+  <!-- 视图1：选桌 / 开台 -->
+  <section id="viewTables" class="m-view hidden">
+    <p class="m-notice">请选择您所在的桌台；空闲桌台点击即可自助开台（开台后开始计桌费）。</p>
+    <div id="mTableGrid" class="m-grid"></div>
+  </section>
+
+  <!-- 视图2：点单（商品 + 购物车） -->
+  <section id="viewShop" class="m-view hidden">
+    <div id="mCats" class="m-cats"></div>
+    <div id="mProducts" class="m-products"></div>
+    <div style="height:70px"></div><!-- 给底部购物车条留位置 -->
+    <div id="mCartBar" class="m-cartbar hidden">
+      <div class="m-cart-info">
+        <span id="mCartCount" class="m-cart-count">0</span>
+        合计 <b id="mCartTotal">¥0.00</b>
+      </div>
+      <button id="mSubmitBtn" class="m-btn primary">提交订单</button>
+    </div>
+  </section>
+
+  <!-- 视图3：我的订单（本桌） -->
+  <section id="viewOrders" class="m-view hidden">
+    <div id="mOrders"></div>
+  </section>
+
+  <!-- 底部导航 -->
+  <nav id="mNav" class="m-nav hidden">
+    <button class="m-nav-item active" data-view="shop">🛒 点单</button>
+    <button class="m-nav-item" data-view="orders">📋 我的订单</button>
+  </nav>
+
+  <!-- 提交订单弹层 -->
+  <div id="mConfirmMask" class="m-mask hidden">
+    <div class="m-sheet">
+      <h3>确认订单</h3>
+      <ul id="mConfirmItems"></ul>
+      <div class="m-confirm-total">合计 <b id="mConfirmTotal"></b></div>
+      <textarea id="mRemark" rows="2" placeholder="备注（可空），如：少冰、尽快送"></textarea>
+      <div class="m-sheet-btns">
+        <button class="m-btn" id="mCancelOrder">再想想</button>
+        <button class="m-btn primary" id="mDoSubmit">确认提交</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="mToast" class="m-toast hidden"></div>
+
+  <script src="mobile.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "qipaishi-pos",
+  "version": "1.0.0",
+  "description": "棋牌室收银下单系统：店长后台（桌台/商品/订单/账单）+ 顾客移动端扫码点单",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server/index.js",
+    "dev": "node --disable-warning=ExperimentalWarning --watch server/index.js",
+    "reset-db": "node --disable-warning=ExperimentalWarning server/db.js --reset"
+  },
+  "engines": {
+    "node": ">=22.5"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}

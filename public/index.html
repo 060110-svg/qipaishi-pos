@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>棋牌室收银下单系统</title>
+  <style>
+    body { font-family: "Microsoft YaHei", sans-serif; background: #111827; color: #fff;
+           min-height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; }
+    .box { text-align: center; padding: 30px; }
+    h1 { font-size: 26px; margin-bottom: 8px; }
+    p { color: #9ca3af; margin-bottom: 30px; }
+    a { display: block; text-decoration: none; margin: 14px auto; max-width: 320px;
+        padding: 16px; border-radius: 12px; font-size: 17px; }
+    .admin { background: #2563eb; color: #fff; }
+    .mobile { background: #fff; color: #111827; }
+    small { color: #6b7280; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>🀄 棋牌室收银下单系统</h1>
+    <p>请选择入口</p>
+    <a class="admin" href="/admin/">💼 店长后台（桌台 · 商品 · 订单 · 账单）</a>
+    <a class="mobile" href="/mobile/">📱 顾客点单（选桌 · 开台 · 下单）</a>
+    <small>提示：给每张桌生成二维码，内容填 http://本机IP:3000/mobile/?table=桌台名（如 ?table=A1），顾客扫码直达本桌点单页。</small>
+  </div>
+</body>
+</html>

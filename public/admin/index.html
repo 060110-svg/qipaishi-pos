@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>店长后台 · 棋牌室收银系统</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+  <!-- ========== 登录遮罩 ========== -->
+  <div id="loginMask" class="mask hidden">
+    <div class="login-box">
+      <h2>🀄 店长登录</h2>
+      <input type="password" id="loginPwd" placeholder="请输入管理密码" autocomplete="current-password">
+      <button id="loginBtn" class="btn primary block">登 录</button>
+      <p class="tip">默认密码 123456，可在 server/config.js 修改</p>
+    </div>
+  </div>
+
+  <!-- ========== 顶栏 ========== -->
+  <header class="topbar">
+    <h1>🀄 棋牌室收银 · 店长后台</h1>
+    <div class="topbar-right">
+      <span id="clock" class="clock"></span>
+      <button id="bellBtn" class="btn bell" title="新订单提醒">🔔<span id="bellBadge" class="badge hidden">0</span></button>
+      <button id="soundBtn" class="btn" title="开关声音提醒">🔊</button>
+      <button id="logoutBtn" class="btn">退出</button>
+    </div>
+  </header>
+
+  <!-- ========== 页签 ========== -->
+  <nav class="tabs">
+    <button class="tab active" data-tab="tables">桌台看板</button>
+    <button class="tab" data-tab="products">商品管理</button>
+    <button class="tab" data-tab="orders">订单管理<span id="ordersBadge" class="badge hidden">0</span></button>
+    <button class="tab" data-tab="bills">账单查询</button>
+  </nav>
+
+  <main>
+    <section id="tab-tables"  class="tab-page"></section>
+    <section id="tab-products" class="tab-page hidden"></section>
+    <section id="tab-orders"  class="tab-page hidden"></section>
+    <section id="tab-bills"   class="tab-page hidden"></section>
+  </main>
+
+  <!-- ========== 通用弹窗（内容由 JS 生成） ========== -->
+  <div id="modalMask" class="mask hidden"><div class="modal" id="modalBox"></div></div>
+
+  <!-- ========== 右下角通知 ========== -->
+  <div id="toasts"></div>
+
+  <!-- ========== 打印小票区域（平时隐藏，仅打印时显示） ========== -->
+  <div id="printArea"></div>
+
+  <script src="admin.js"></script>
+</body>
+</html>
