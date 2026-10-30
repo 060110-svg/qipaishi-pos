@@ -1,0 +1,40 @@
+/* ============ 全局样式（与移动端网页同款配色） ============ */
+page { background: #f3f4f6; font-size: 15px; color: #1f2937; }
+.muted { color: #9ca3af; font-size: 12px; }
+
+/* 抹掉微信 button 默认边框/外边距，统一用 .btn 控制外观 */
+button { margin: 0; }
+button::after { border: none; }
+
+/* 按钮 */
+.btn {
+  border: 1px solid #d1d5db; background: #fff; color: #374151;
+  padding: 10px 0; border-radius: 10px; font-size: 15px; text-align: center;
+}
+.btn.primary { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+.btn[disabled] { opacity: .5; }
+
+/* 底部弹层 */
+.mask {
+  position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 60;
+  display: flex; align-items: flex-end;
+}
+.sheet {
+  background: #fff; width: 100%; border-radius: 16px 16px 0 0;
+  padding: 18px 18px calc(24px + env(safe-area-inset-bottom));
+  animation: sheetUp .25s ease;
+}
+@keyframes sheetUp {
+  from { transform: translateY(48px); opacity: .5; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.sheet h3 { margin-bottom: 10px; }
+.sheet-btns { display: flex; gap: 10px; }
+.sheet-btns .btn { flex: 1; }
+
+/* 状态标签 */
+.tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
+.st-pending   { background: #fef3c7; color: #b45309; }
+.st-confirmed { background: #d1fae5; color: #047857; }
+.st-cancelled { background: #fee2e2; color: #b91c1c; }
+.st-settled   { background: #e0e7ff; color: #4338ca; }

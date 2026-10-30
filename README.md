@@ -137,6 +137,7 @@ npm run reset-db   # ⚠ 清空数据库重建（恢复示例数据，慎用）
 | GET | `/api/bills?date=YYYY-MM-DD` | 店长 | 账单列表（`date=all` 查全部） |
 | GET | `/api/bills/stats/today?date=` | 店长 | 营业统计 |
 | GET | `/api/bills/:id` | 店长 | 账单详情（含明细，打印用） |
+| GET | `/api/bills/in-progress` | 店长 | 进行中的桌台（累计桌费+已接单订单，账单查询实时区） |
 
 店长接口鉴权方式：请求头 `x-admin-token: <登录返回的token>`。
 
@@ -167,9 +168,37 @@ qipaishi-pos/
 │   ├── utils/pricing.js    # ★ 桌费计算规则
 │   ├── utils/helpers.js    # 时间/金额/单号工具
 │   └── routes/             # tables / products / orders / bills / notify
-└── public/
+├── public/
     ├── index.html          # 导航页
     ├── admin/              # ★ 店长后台（index.html + admin.js + admin.css）
     └── mobile/             # ★ 顾客移动端（index.html + mobile.js + mobile.css）
+└── miniprogram/            # 微信小程序·顾客自助点单（用微信开发者工具打开此目录）
+    ├── app.js / app.json / app.wxss
+    ├── utils/              # api.js（请求封装）/ config.js（★ 后端地址）
+    └── pages/              # tables 选桌开台 / shop 点单 / orders 我的订单
 ```
 （带 ★ 的是你日后最常改的文件）
+
+---
+
+## 十、微信小程序（顾客自助点单）
+
+`miniprogram/` 目录是一个完整的微信小程序工程，功能与顾客移动端网页一致：
+选桌/扫码直达 → 开台确认弹层 → 分类点单+购物车 → 提交订单 → 我的订单（15 秒轮询刷新）。
+**后端零改动**，直接复用第七节的公开 API；店长后台仍用网页端。
+
+### 局域网试用（无需注册账号也能看界面）
+
+1. 安装[微信开发者工具](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html)，导入项目时选择 `miniprogram/` 目录；AppID 可先选"测试号"
+2. 改 `miniprogram/utils/config.js` 的 `BASE_URL` 为收银电脑局域网 IP（如 `http://192.168.0.105:3000`）
+3. 开发者工具「详情 → 本地设置」勾选 **不校验合法域名、web-view、TLS 版本以及 HTTPS 证书**
+4. 模拟器里即可走完整流程；真机预览需 own AppID（见下），手机开启开发调试后同样直连局域网
+
+### 正式上线给顾客扫（必须满足）
+
+1. 在 [mp.weixin.qq.com](https://mp.weixin.qq.com) 注册小程序账号（个人主体免费），拿到 AppID 填进 `miniprogram/project.config.json`
+2. 后端部署到**公网服务器 + HTTPS + ICP 备案域名**（局域网 IP 无法过审），把该域名加入小程序后台「开发管理 → 开发设置 → request 合法域名」
+3. 提交代码审核、发布；此后顾客扫**小程序码**进入
+4. 每桌的小程序码：调用微信 `wxacode.getUnlimited` 接口生成，`scene` 传桌台名（如 `A1`），小程序已支持解析（`app.js` onLaunch）；需要的话可以在后端加一个生成/下载二维码的接口
+
+> 注意：未发布前，体验版/开发版只有"体验成员"能打开，顾客扫码进不来——这是微信的平台规则，与代码无关。

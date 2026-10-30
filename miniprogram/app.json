@@ -1,0 +1,25 @@
+{
+  "pages": [
+    "pages/tables/tables",
+    "pages/shop/shop",
+    "pages/orders/orders"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#4f46e5",
+    "navigationBarTitleText": "棋牌室自助点单",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#f3f4f6"
+  },
+  "tabBar": {
+    "color": "#9ca3af",
+    "selectedColor": "#4f46e5",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      { "pagePath": "pages/shop/shop", "text": "点单" },
+      { "pagePath": "pages/orders/orders", "text": "我的订单" }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

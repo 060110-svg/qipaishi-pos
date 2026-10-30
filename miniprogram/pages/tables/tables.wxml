@@ -1,0 +1,38 @@
+<view class="notice">请选择您所在的桌台；空闲桌台点击即可自助开台（开台后开始计桌费）。</view>
+
+<view class="grid">
+  <view
+    class="tcard {{item.occupied ? 'occupied' : ''}}"
+    wx:for="{{tables}}" wx:key="id"
+    bindtap="pickTable" data-id="{{item.id}}"
+  >
+    <view class="tname">{{item.name}}</view>
+    <view class="ttype">{{item.rateText}}/小时</view>
+    <view class="tstatus {{item.occupied ? 'occ' : ''}}">
+      {{item.occupied ? '使用中 · 点击点单' : '空闲 · 点击开台'}}
+    </view>
+  </view>
+</view>
+
+<!-- 开台确认弹层 -->
+<view class="mask" wx:if="{{openInfo}}" bindtap="closeOpen">
+  <view class="sheet" catchtap="noop">
+    <view class="sheet-title">开台确认</view>
+    <view class="open-table">
+      <text class="open-name">{{openInfo.name}}</text>
+      <text class="open-type">{{openInfo.roomTypeText}}</text>
+    </view>
+    <view class="open-row"><text>桌费费率</text><text class="price">{{openInfo.rateText}} / 小时</text></view>
+    <view class="open-row"><text>最低消费</text><text class="price">{{openInfo.minText}}</text></view>
+    <view class="open-warn">⏱ 确认开台后将立即开始计桌费</view>
+    <input
+      class="open-input" maxlength="20" value="{{cname}}"
+      placeholder="怎么称呼您？（可空），如：王先生"
+      bindinput="onCnameInput"
+    />
+    <view class="sheet-btns">
+      <button class="btn" bindtap="closeOpen">再想想</button>
+      <button class="btn primary" bindtap="confirmOpen">确认开台</button>
+    </view>
+  </view>
+</view>

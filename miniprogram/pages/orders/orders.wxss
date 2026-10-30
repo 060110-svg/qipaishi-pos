@@ -1,0 +1,7 @@
+.wrap { padding: 12px 16px 30px; }
+.ocard { background: #fff; border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; }
+.ohead { display: flex; align-items: center; gap: 8px; }
+.oamount { margin-left: auto; color: #ef4444; font-size: 16px; font-weight: bold; }
+.oitems { margin: 6px 0 2px; color: #374151; font-size: 14px; }
+.empty { text-align: center; color: #9ca3af; padding: 40px 0; }
+.go-btn { width: 60%; margin: 0 auto; }

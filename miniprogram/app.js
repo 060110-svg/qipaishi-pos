@@ -1,0 +1,28 @@
+/**
+ * 小程序入口：解析扫码参数、维护当前桌台
+ * 扫码进入：小程序码 scene 为桌台名（如 A1）或 table=A1；普通进入也可带 query table=A1
+ */
+App({
+  globalData: {
+    table: null,       // 当前桌台对象
+    sceneTable: '',    // 扫码带入的桌台名（tables 页消费一次）
+  },
+
+  onLaunch(options) {
+    // 普通启动/链接参数 table=A1（或 id=A1）。
+    // 注意：onLaunch 的 options.scene 是"进入场景值"编号（如扫码=1047），不是自定义参数；
+    // 小程序码的自定义 scene 字符串在页面 onLoad(options).scene 里解析，见 tables 页。
+    const q = options.query || {};
+    const name = q.table || q.id || '';
+    if (name) this.globalData.sceneTable = name;
+  },
+
+  setTable(t) {
+    this.globalData.table = t;
+    wx.setStorageSync('currentTableId', t.id);
+  },
+  clearTable() {
+    this.globalData.table = null;
+    wx.removeStorageSync('currentTableId');
+  },
+});
