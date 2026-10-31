@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node --disable-warning=ExperimentalWarning server/index.js",
     "dev": "node --disable-warning=ExperimentalWarning --watch server/index.js",
-    "reset-db": "node --disable-warning=ExperimentalWarning server/db.js --reset"
+    "reset-db": "node --disable-warning=ExperimentalWarning server/db.js --reset",
+    "test": "node --test --disable-warning=ExperimentalWarning"
   },
   "engines": {
     "node": ">=22.5"

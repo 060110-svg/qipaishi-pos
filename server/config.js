@@ -13,6 +13,13 @@ module.exports = {
   // 登录令牌有效期（小时）
   tokenTTLHours: 12,
 
+  // 登录安全：防爆破
+  loginSecurity: {
+    maxAttempts: 10,             // 连续输错次数上限
+    lockoutMinutes: 15,          // 锁定时长（分钟）
+    windowMinutes: 10,           // 失败计数窗口（分钟，此窗口内连续错误才累计）
+  },
+
   // SQLite 数据库文件位置（首次启动自动创建）
   dbFile: path.join(__dirname, '..', 'db', 'data.db'),
 

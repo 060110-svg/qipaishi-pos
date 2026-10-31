@@ -9,10 +9,13 @@ const path = require('path');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const config = require('./config');
-const { router: authRouter, requireAdmin, optionalAdmin } = require('./auth');
+const { router: authRouter, requireAdmin, optionalAdmin, checkPasswordStrength } = require('./auth');
+const db = require('./db');
 
 const app = express();
 app.set('trust proxy', 1);  // nginx 反代场景：限流按 X-Forwarded-For 真实 IP 计；直连时不受影响
+
+const startTime = Date.now(); // 服务启动时间，健康检查用
 
 // ---------- 基础中间件 ----------
 // helmet 安全头；CSP 放开内联脚本——admin/mobile 大量使用 inline onclick 架构，
@@ -37,6 +40,14 @@ app.use('/api', rateLimit({
   standardHeaders: true, legacyHeaders: false,
   message: { error: '请求过于频繁，请稍后再试' },
 }));
+// 登录接口专用限流：5 次/分/IP，防在线爆破（锁定期逻辑在 auth.js）
+const loginLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  standardHeaders: true, legacyHeaders: false,
+  message: { error: '请求过于频繁，请稍后再试' },
+});
+app.use('/api/login', loginLimiter);
 const writeLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: config.rateLimit.writePerMin,
@@ -47,6 +58,20 @@ const writeLimiter = rateLimit({
 
 // ---------- 登录鉴权 ----------
 app.use('/api', authRouter);
+
+// ---------- 健康检查（公开，接 uptime 监控用） ----------
+app.get('/api/health', (req, res) => {
+  let dbOk = false;
+  try {
+    dbOk = Boolean(db.prepare('SELECT 1 AS ok').get());
+  } catch (_) { /* 数据库异常时 dbOk 保持 false */ }
+  res.json({
+    ok: dbOk,
+    uptime: Math.floor((Date.now() - startTime) / 1000),
+    db: dbOk ? 'ok' : 'error',
+    version: '1.0.0',
+  });
+});
 
 // ---------- 业务路由 ----------
 // 桌台：查询/开台对顾客开放；增删改、结桌需要店长权限（路由内部处理）
@@ -78,10 +103,12 @@ app.use((err, req, res, next) => {
 
 // ---------- 启动 ----------
 app.listen(config.port, () => {
+  checkPasswordStrength();
   console.log('==================================================');
   console.log('  棋牌室收银下单系统已启动');
   console.log(`  导航页    : http://localhost:${config.port}/`);
   console.log(`  店长后台  : http://localhost:${config.port}/admin/   (默认密码 ${config.adminPassword})`);
   console.log(`  顾客点单  : http://localhost:${config.port}/mobile/  (手机需与电脑同一WiFi, 用 http://<电脑IP>:${config.port}/mobile/ 访问)`);
+  console.log(`  健康检查  : http://localhost:${config.port}/api/health`);
   console.log('==================================================');
 });
