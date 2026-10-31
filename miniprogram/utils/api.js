@@ -5,8 +5,18 @@ const { BASE_URL } = require('./config.js');
 
 function request(path, { method = 'GET', body } = {}) {
   const header = { 'Content-Type': 'application/json' };
-  const wxToken = wx.getStorageSync('wxToken');
-  if (wxToken) header['x-wx-token'] = wxToken; // 静默登录会话（匿名时不带）
+
+  // 优先使用店长令牌（店长模式）
+  const adminToken = wx.getStorageSync('adminToken');
+  const isAdmin = wx.getStorageSync('isAdmin');
+  if (isAdmin && adminToken) {
+    header['x-admin-token'] = adminToken;
+  } else {
+    // 顾客模式：使用微信静默登录令牌
+    const wxToken = wx.getStorageSync('wxToken');
+    if (wxToken) header['x-wx-token'] = wxToken;
+  }
+
   return new Promise((resolve, reject) => {
     wx.request({
       url: BASE_URL + '/api' + path,

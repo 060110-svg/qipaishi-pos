@@ -3,6 +3,12 @@
  */
 const path = require('path');
 
+// 本地私密配置（server/config.local.json，已 gitignore，不会提交到 GitHub）
+// 把自己的 webhook / token 写在这个文件里，例如：
+//   { "feishuWebhook": "https://open.feishu.cn/...", "pushplusToken": "xxxx" }
+let local = {};
+try { local = require('./config.local.json'); } catch (_) { /* 没有该文件时全部走环境变量/默认值 */ }
+
 module.exports = {
   // 服务端口：启动后访问 http://localhost:3000
   port: process.env.PORT || 3000,
@@ -40,6 +46,14 @@ module.exports = {
 
   // 企业微信群机器人 Webhook：新订单实时推送（留空=不推送，网页轮询提醒不受影响）
   webhookUrl: process.env.WEBHOOK_URL || '',
+
+  // PushPlus 微信推送（个人微信推送方案，https://www.pushplus.plus/）
+  pushplus: {
+    token: process.env.PUSHPLUS_TOKEN || local.pushplusToken || '',
+  },
+
+  // 飞书群机器人 Webhook（免费、无需实名）
+  feishuWebhook: process.env.FEISHU_WEBHOOK || local.feishuWebhook || '',
 
   // 限流（防恶意刷接口）：全局每分钟上限 / 顾客写接口每分钟上限
   rateLimit: { globalPerMin: 300, writePerMin: 20 },

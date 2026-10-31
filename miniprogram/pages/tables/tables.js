@@ -104,4 +104,13 @@ Page({
     app.setTable(t);
     wx.switchTab({ url: '/pages/shop/shop' });
   },
+
+  // 店长入口：已登录直接进管理页，否则进登录页
+  enterAdmin() {
+    if (wx.getStorageSync('isAdmin') && wx.getStorageSync('adminToken')) {
+      wx.navigateTo({ url: '/pages/admin/manager' });
+    } else {
+      wx.navigateTo({ url: '/pages/admin/login' });
+    }
+  },
 });

@@ -1,0 +1,42 @@
+<view class="container">
+  <view class="product-list" wx:if="{{products.length > 0}}">
+    <view class="product-card {{item.active ? '' : 'inactive'}}" wx:for="{{products}}" wx:key="id">
+      <view class="product-main">
+        <view class="product-top">
+          <view class="product-name">{{item.name}}</view>
+          <view class="product-category">{{item.categoryText}}</view>
+        </view>
+        <view class="product-price" bindtap="editPrice" data-id="{{item.id}}" data-price="{{item.price}}">
+          ¥{{item.priceText}} <text class="edit-hint">✎</text>
+        </view>
+      </view>
+
+      <view class="product-side">
+        <!-- 库存调整 -->
+        <view class="stock-row">
+          <view class="stock-btn" bindtap="adjustStock" data-id="{{item.id}}" data-delta="-1" wx:if="{{item.stock >= 0}}">−</view>
+          <view class="stock-value" bindtap="editStock" data-id="{{item.id}}" data-stock="{{item.stock}}">
+            {{item.stockText}}
+          </view>
+          <view class="stock-btn" bindtap="adjustStock" data-id="{{item.id}}" data-delta="1" wx:if="{{item.stock >= 0}}">＋</view>
+        </view>
+
+        <!-- 上下架开关 -->
+        <view
+          class="toggle {{item.active ? 'on' : 'off'}}"
+          bindtap="toggleActive"
+          data-id="{{item.id}}"
+          data-active="{{item.active}}"
+        >{{item.active ? '在售' : '下架'}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{!loading && products.length === 0}}">
+    <view class="empty-icon">📦</view>
+    <view class="empty-text">暂无商品，请在网页后台添加</view>
+  </view>
+
+  <view class="loading" wx:if="{{loading}}">加载中...</view>
+  <view class="tips">点击价格可修改 · 点击库存数字可直接输入 · 新增/删除商品请用网页后台</view>
+</view>

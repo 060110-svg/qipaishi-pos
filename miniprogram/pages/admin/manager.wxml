@@ -1,0 +1,76 @@
+<view class="container">
+  <!-- 顶部标题栏 -->
+  <view class="header">
+    <view class="title">店长管理后台</view>
+    <view class="logout" bindtap="logout">退出登录</view>
+  </view>
+
+  <!-- 数据统计卡片 -->
+  <view class="stats-card">
+    <view class="stat-item">
+      <view class="stat-value">{{stats.occupiedTables}}<text class="stat-sub">/{{stats.totalTables}}</text></view>
+      <view class="stat-label">营业中桌台</view>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item">
+      <view class="stat-value">{{stats.pendingOrders}}</view>
+      <view class="stat-label">待处理订单</view>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item">
+      <view class="stat-value small">¥{{stats.todayRevenue}}</view>
+      <view class="stat-label">今日营收</view>
+    </view>
+  </view>
+
+  <!-- 新订单提醒 -->
+  <view class="new-orders" wx:if="{{newOrders.length > 0}}">
+    <view class="new-orders-header">
+      <view class="new-orders-title">🔔 新订单提醒（{{newOrders.length}}）</view>
+      <view class="new-orders-clear" bindtap="clearNewOrders">知道了</view>
+    </view>
+    <view class="new-order-item" wx:for="{{newOrders}}" wx:key="id">
+      <view class="order-header">
+        <text class="table-name">{{item.table_name}}</text>
+        <text class="order-no">{{item.order_no}}</text>
+      </view>
+      <view class="order-items">
+        <text wx:for="{{item.items}}" wx:key="id" wx:for-item="it" class="order-item-tag">{{it.product_name}}×{{it.quantity}}</text>
+      </view>
+      <view class="order-total">合计 ¥{{item.total_amount}}</view>
+    </view>
+    <view class="new-orders-action" bindtap="goToOrders">去处理订单 ›</view>
+  </view>
+
+  <!-- 功能入口 -->
+  <view class="menu-list">
+    <view class="menu-item" bindtap="goToOrders">
+      <view class="menu-icon">📋</view>
+      <view class="menu-content">
+        <view class="menu-title">订单管理</view>
+        <view class="menu-desc">确认 / 取消顾客订单</view>
+      </view>
+      <view class="menu-arrow">›</view>
+    </view>
+
+    <view class="menu-item" bindtap="goToProducts">
+      <view class="menu-icon">🛒</view>
+      <view class="menu-content">
+        <view class="menu-title">商品管理</view>
+        <view class="menu-desc">上架 / 下架 / 调整库存</view>
+      </view>
+      <view class="menu-arrow">›</view>
+    </view>
+
+    <view class="menu-item" bindtap="goToTables">
+      <view class="menu-icon">🪑</view>
+      <view class="menu-content">
+        <view class="menu-title">桌台状态</view>
+        <view class="menu-desc">查看各桌台营业情况</view>
+      </view>
+      <view class="menu-arrow">›</view>
+    </view>
+  </view>
+
+  <view class="tips">提示：开台/结桌/账单等完整功能请使用网页店长后台</view>
+</view>

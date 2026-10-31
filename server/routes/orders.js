@@ -91,6 +91,8 @@ router.post('/', (req, res) => {
   })();
 
   pushWebhook(order, table); // 企业微信群推送（未配置或失败均不影响下单）
+  // pushPlusNotify(order, table); // PushPlus 微信推送（已禁用，需实名认证）
+  sendFeishuNotify(order, table); // 飞书群推送
   res.json(attachDetail(order));
 });
 
@@ -107,6 +109,59 @@ function pushWebhook(order, table) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ msgtype: 'text', text: { content } }),
   }).catch((e) => console.error('[webhook] 推送失败：', e.message));
+}
+
+// PushPlus 微信推送（config.pushplus.token 留空=不推送）
+function pushPlusNotify(order, table) {
+  if (!config.pushplus?.token) return;
+  const items = db.prepare('SELECT product_name, quantity FROM order_items WHERE order_id = ?').all(order.id);
+  const title = `🛎 新订单：桌台 ${table.name}`;
+  const content = `### 订单号：${order.order_no}\n\n`
+    + `**桌台：** ${table.name}\n\n`
+    + `**商品明细：**\n`
+    + items.map((it) => `- ${it.product_name} × ${it.quantity}`).join('\n')
+    + `\n\n**合计金额：** ¥${order.total_amount}`
+    + (order.remark ? `\n\n**备注：** ${order.remark}` : '')
+    + `\n\n> 请及时处理订单`;
+  fetch('http://www.pushplus.plus/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      token: config.pushplus.token,
+      title,
+      content,
+      template: 'markdown',
+    }),
+  }).then(r => r.json()).then(d => {
+    if (d.code !== 200) console.error('[pushplus] 推送失败：', d.msg);
+  }).catch((e) => console.error('[pushplus] 推送失败：', e.message));
+}
+
+// 飞书群机器人推送（config.feishuWebhook 留空=不推送）
+function sendFeishuNotify(order, table) {
+  if (!config.feishuWebhook) return;
+  const items = db.prepare('SELECT product_name, quantity FROM order_items WHERE order_id = ?').all(order.id);
+  const content = `🛎 新订单提醒\n`
+    + `桌台：${table.name}\n`
+    + `订单号：${order.order_no}\n`
+    + `商品明细：${items.map(it => `${it.product_name}×${it.quantity}`).join('、')}\n`
+    + `合计金额：¥${order.total_amount}\n`
+    + (order.remark ? `备注：${order.remark}\n` : '')
+    + `请及时处理！`;
+  fetch(config.feishuWebhook, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      msg_type: 'text',
+      content: { text: content },
+    }),
+  }).then(r => r.json()).then(d => {
+    if (d.code !== 0) {
+      console.error('[feishu] 推送失败：', d.msg);
+    } else {
+      console.log('[feishu] 推送成功');
+    }
+  }).catch((e) => console.error('[feishu] 推送失败：', e.message));
 }
 
 // ---------- 查询订单列表 ----------

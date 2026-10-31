@@ -2,7 +2,11 @@
   "pages": [
     "pages/tables/tables",
     "pages/shop/shop",
-    "pages/orders/orders"
+    "pages/orders/orders",
+    "pages/admin/login",
+    "pages/admin/manager",
+    "pages/admin/orders",
+    "pages/admin/products"
   ],
   "window": {
     "navigationBarBackgroundColor": "#4f46e5",

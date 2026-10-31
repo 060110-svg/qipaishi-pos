@@ -8,6 +8,7 @@ App({
   globalData: {
     table: null,       // 当前桌台对象
     sceneTable: '',    // 扫码带入的桌台名（tables 页消费一次）
+    isAdmin: false,    // 是否为店长模式
   },
 
   onLaunch(options) {
@@ -17,7 +18,14 @@ App({
     const q = options.query || {};
     const name = q.table || q.id || '';
     if (name) this.globalData.sceneTable = name;
-    this.wxLogin();
+
+    // 恢复店长登录状态
+    const isAdmin = wx.getStorageSync('isAdmin');
+    if (isAdmin) {
+      this.globalData.isAdmin = true;
+    } else {
+      this.wxLogin();
+    }
   },
 
   // 静默登录：拿 openid 会话令牌，开台/下单自动带上用于归属与防刷。
@@ -40,5 +48,11 @@ App({
   clearTable() {
     this.globalData.table = null;
     wx.removeStorageSync('currentTableId');
+  },
+
+  // 切换店长/顾客模式
+  setAdminMode(isAdmin) {
+    this.globalData.isAdmin = isAdmin;
+    wx.setStorageSync('isAdmin', isAdmin);
   },
 });

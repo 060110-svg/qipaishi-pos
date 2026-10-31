@@ -13,6 +13,9 @@ npm-debug.log*
 # 环境变量（如果你以后用 .env 存密码，千万别提交）
 .env
 
+# 本地私密配置（webhook/token 等，绝不提交）
+server/config.local.json
+
 # 系统文件
 .DS_Store
 Thumbs.db

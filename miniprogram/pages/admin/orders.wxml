@@ -1,0 +1,53 @@
+<view class="container">
+  <!-- 状态筛选标签 -->
+  <view class="tabs">
+    <view
+      wx:for="{{tabs}}"
+      wx:key="key"
+      class="tab {{activeTab === item.key ? 'active' : ''}}"
+      data-key="{{item.key}}"
+      bindtap="switchTab"
+    >{{item.label}}</view>
+  </view>
+
+  <!-- 订单列表 -->
+  <view class="order-list" wx:if="{{orders.length > 0}}">
+    <view class="order-card" wx:for="{{orders}}" wx:key="id">
+      <view class="order-top">
+        <view class="order-table">🪑 {{item.table_name}}</view>
+        <view class="order-status status-{{item.status}}">{{item.statusText}}</view>
+      </view>
+      <view class="order-no">单号 {{item.order_no}} · {{item.timeText}}</view>
+      <view class="order-items">{{item.itemsText}}</view>
+      <view class="order-remark" wx:if="{{item.remark}}">备注：{{item.remark}}</view>
+      <view class="order-bottom">
+        <view class="order-amount">¥{{item.total_amount}}</view>
+        <view class="order-actions" wx:if="{{item.status === 'pending' || item.status === 'confirmed'}}">
+          <button
+            wx:if="{{item.status === 'pending'}}"
+            class="btn btn-confirm"
+            size="mini"
+            data-id="{{item.id}}"
+            data-no="{{item.order_no}}"
+            bindtap="confirmOrder"
+          >确认</button>
+          <button
+            class="btn btn-cancel"
+            size="mini"
+            data-id="{{item.id}}"
+            data-no="{{item.order_no}}"
+            bindtap="cancelOrder"
+          >取消</button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty" wx:if="{{!loading && orders.length === 0}}">
+    <view class="empty-icon">📭</view>
+    <view class="empty-text">暂无相关订单</view>
+  </view>
+
+  <view class="loading" wx:if="{{loading}}">加载中...</view>
+</view>

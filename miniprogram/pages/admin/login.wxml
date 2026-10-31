@@ -1,0 +1,30 @@
+<view class="container">
+  <view class="logo">🀄 棋牌室收银系统</view>
+  <view class="title">店长后台登录</view>
+
+  <view class="form">
+    <view class="input-wrap">
+      <input
+        class="input"
+        type="password"
+        placeholder="请输入店长密码"
+        value="{{password}}"
+        bindinput="onPasswordInput"
+        password="{{true}}"
+      />
+    </view>
+
+    <button
+      class="submit-btn {{loading ? 'loading' : ''}}"
+      bindtap="onSubmit"
+      disabled="{{loading}}"
+    >
+      {{loading ? '登录中...' : '登录'}}
+    </button>
+  </view>
+
+  <view class="tips">
+    <text>默认密码：123456</text>
+    <text catchtap="backToCustomer" class="link">返回顾客点单</text>
+  </view>
+</view>
