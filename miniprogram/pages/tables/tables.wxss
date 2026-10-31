@@ -1,4 +1,16 @@
-.notice { padding: 12px 16px; color: #6b7280; font-size: 13px; }
+.notice-row { display: flex; align-items: center; padding-right: 16px; gap: 10px; }
+.notice { padding: 12px 0 12px 16px; color: #6b7280; font-size: 13px; flex: 1; }
+
+/* 店长入口（通知条内嵌徽章） */
+.admin-entry {
+  flex-shrink: 0;
+  background: #1f2937;
+  color: #fff;
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  opacity: 0.85;
+}
 
 .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 16px 30px; }
 .tcard {
@@ -30,16 +42,3 @@
   padding: 10px; font-size: 14px; margin-bottom: 12px; background: #fff;
 }
 
-/* 店长入口悬浮按钮 */
-.admin-fab {
-  position: fixed;
-  right: 12px;
-  bottom: 80px;
-  background: rgba(31, 41, 55, 0.85);
-  color: #fff;
-  font-size: 12px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  z-index: 50;
-}

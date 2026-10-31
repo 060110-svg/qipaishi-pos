@@ -5,3 +5,15 @@
 .oitems { margin: 6px 0 2px; color: #374151; font-size: 14px; }
 .empty { text-align: center; color: #9ca3af; padding: 40px 0; }
 .go-btn { width: 60%; margin: 0 auto; }
+
+
+/* 店长入口（顶部右对齐细条） */
+.admin-bar { display: flex; justify-content: flex-end; padding: 10px 16px 0; }
+.admin-entry {
+  background: #1f2937;
+  color: #fff;
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  opacity: 0.85;
+}

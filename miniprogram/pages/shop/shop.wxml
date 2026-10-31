@@ -1,6 +1,9 @@
 <view class="shop-head">
-  <text class="shop-table">{{tableName}}</text>
-  <text class="muted">选好后提交，店长接单后结桌统一结算</text>
+  <view class="shop-head-main">
+    <text class="shop-table">{{tableName}}</text>
+    <text class="muted">选好后提交，店长接单后结桌统一结算</text>
+  </view>
+  <view class="admin-entry" bindtap="enterAdmin">👔 店长</view>
 </view>
 
 <!-- 分类页签 -->

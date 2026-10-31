@@ -1,7 +1,7 @@
-<view class="notice">请选择您所在的桌台；空闲桌台点击即可自助开台（开台后开始计桌费）。</view>
-
-<!-- 店长入口（悬浮） -->
-<view class="admin-fab" bindtap="enterAdmin">👔 店长</view>
+<view class="notice-row">
+  <view class="notice">请选择您所在的桌台；空闲桌台点击即可自助开台（开台后开始计桌费）。</view>
+  <view class="admin-entry" bindtap="enterAdmin">👔 店长</view>
+</view>
 
 <view class="grid">
   <view

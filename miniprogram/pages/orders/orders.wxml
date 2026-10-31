@@ -1,3 +1,8 @@
+<!-- 店长入口（顶部细条，不挡订单列表） -->
+<view class="admin-bar">
+  <view class="admin-entry" bindtap="enterAdmin">👔 店长</view>
+</view>
+
 <view class="wrap" wx:if="{{hasTable}}">
   <view class="ocard" wx:for="{{orders}}" wx:key="id">
     <view class="ohead">
